@@ -51,6 +51,14 @@ app.use(morgan('dev'));
 app.use('/api/auth', authRoutes);
 app.use('/api/tables', tableRoutes);
 app.use('/api/categories', categoryRoutes);
+app.get('/api/menu-test', (req, res) => {
+  res.json({
+    success: true,
+    message: 'Menu route is working from server.js'
+  });
+});
+
+app.use('/api/menu', menuRoutes);
 app.use('/api/menu', menuRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/payments', paymentRoutes);

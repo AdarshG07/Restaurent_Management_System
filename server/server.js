@@ -5,8 +5,8 @@ import dotenv from 'dotenv';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
-import path from 'path';
-import { fileURLToPath } from 'url';
+// import path from 'path';
+// import { fileURLToPath } from 'url';
 import connectDB from './src/config/db.js';
 import authRoutes from './src/routes/authRoutes.js';
 import tableRoutes from './src/routes/tableRoutes.js';
@@ -66,14 +66,21 @@ app.use('/api/billing', billingRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/notifications', notificationRoutes);
 
-if (process.env.NODE_ENV === 'production') {
-  const __filename = fileURLToPath(import.meta.url);
-  const __dirname = path.dirname(__filename);
-  app.use(express.static(path.join(__dirname, '../client/dist')));
-  app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, '../client/dist/index.html'));
+// if (process.env.NODE_ENV === 'production') {
+//   const __filename = fileURLToPath(import.meta.url);
+//   const __dirname = path.dirname(__filename);
+//   app.use(express.static(path.join(__dirname, '../client/dist')));
+//   app.get('*', (req, res) => {
+//     res.sendFile(path.join(__dirname, '../client/dist/index.html'));
+//   });
+// }
+
+app.get('/', (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: 'Restaurant Management API is running'
   });
-}
+});
 
 app.use(notFound);
 app.use(errorHandler);

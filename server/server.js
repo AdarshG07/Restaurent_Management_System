@@ -59,7 +59,6 @@ app.get('/api/menu-test', (req, res) => {
 });
 
 app.use('/api/menu', menuRoutes);
-app.use('/api/menu', menuRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/reviews', reviewRoutes);

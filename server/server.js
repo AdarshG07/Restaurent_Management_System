@@ -40,7 +40,7 @@ const io = new Server(server, {
 
 initSocket(io);
 
-connectDB();
+// connectDB();
 
 app.use(helmet());
 app.use(express.json({ limit: '10mb' }));

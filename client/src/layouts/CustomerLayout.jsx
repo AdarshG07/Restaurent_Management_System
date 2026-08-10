@@ -27,6 +27,10 @@ const CustomerLayout = () => {
               <PhoneCall className="mr-2 h-4 w-4" />
               Contact
             </Link>
+            <Link to="/admin/login"
+              className="inline-flex items-center rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100">
+                  Admin
+            </Link>
             <Link to="/checkout" className="relative inline-flex items-center rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100">
               <ShoppingCart className="mr-2 h-4 w-4" />
               Cart
@@ -40,7 +44,7 @@ const CustomerLayout = () => {
       </main>
       {location.pathname !== '/checkout' && location.pathname !== '/order' && (
         <footer className="border-t border-slate-200 bg-white py-4 text-center text-sm text-slate-500 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-400">
-          Powered by Restaurant Management Prototype
+          Powered by Restaurant Management System
         </footer>
       )}
     </div>

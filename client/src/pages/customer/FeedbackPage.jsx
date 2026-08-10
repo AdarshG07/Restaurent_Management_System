@@ -1,11 +1,16 @@
 import { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import api from '../../services/api.js';
 import Button from '../../components/common/Button.jsx';
 import Card from '../../components/common/Card.jsx';
 import { toast } from 'sonner';
 
 const FeedbackPage = () => {
-  const [orderId, setOrderId] = useState('');
+  const [searchParams] = useSearchParams();
+
+  const [orderId, setOrderId] = useState(
+  searchParams.get('orderId') || ''
+  );
   const [foodRating, setFoodRating] = useState(5);
   const [serviceRating, setServiceRating] = useState(5);
   const [comment, setComment] = useState('');
@@ -35,11 +40,9 @@ const FeedbackPage = () => {
         <form className="space-y-5" onSubmit={handleSubmit}>
           <label className="block text-sm font-medium text-slate-700 dark:text-slate-200">
             Order ID
-            <input
-              value={orderId}
-              onChange={(e) => setOrderId(e.target.value)}
-              className="mt-2 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
-            />
+            <input value={orderId}
+                    readOnly
+            className="mt-2 w-full rounded-2xl border border-slate-200 bg-slate-100 px-4 py-3 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"/>
           </label>
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="block text-sm font-medium text-slate-700 dark:text-slate-200">

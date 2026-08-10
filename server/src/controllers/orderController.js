@@ -2,6 +2,7 @@ import { validationResult } from 'express-validator';
 import Order from '../models/Order.js';
 import FoodItem from '../models/FoodItem.js';
 import Table from '../models/Table.js';
+import { LOW_STOCK_THRESHOLD } from '../config/constants.js';
 import { emitOrderUpdate, emitNotification } from '../sockets/socketHandler.js';
 
 const calculateTotals = (items, discount = 0) => {
@@ -75,8 +76,35 @@ export const createOrder = async (req, res, next) => {
       quantity: item.quantity,
       instructions: item.instructions || '',
     });
+    
     food.popularity += item.quantity;
-    await food.save();
+
+if (typeof food.stockQuantity === 'number') {
+  if (food.stockQuantity < item.quantity) {
+    res.status(400);
+    return next(new Error(`Insufficient stock: ${food.name}`));
+  }
+
+  food.stockQuantity -= item.quantity;
+
+  if (food.stockQuantity === 0) {
+    food.isAvailable = false;
+  }
+
+  const isLowStock =
+    food.stockQuantity > 0 &&
+    food.stockQuantity <= LOW_STOCK_THRESHOLD;
+
+  if (isLowStock) {
+    emitNotification({
+      title: 'Low Stock',
+      message: `${food.name} has only ${food.stockQuantity} items remaining.`,
+      type: 'low-stock',
+    });
+  }
+}
+
+await food.save();
   }
   const totals = calculateTotals(orderItems, parsedDiscount);
   if (parsedDiscount > totals.subtotal) {
@@ -133,4 +161,32 @@ export const createManualOrder = async (req, res, next) => {
   req.body.discount = discount || 0;
   req.body.createdByAdmin = true;
   return createOrder(req, res, next);
+};
+
+export const updatePreparationTime = async (req, res, next) => {
+  const order = await Order.findById(req.params.id);
+
+  if (!order) {
+    res.status(404);
+    return next(new Error('Order not found'));
+  }
+
+  const minutes = Number(req.body.estimatedMinutes);
+
+  if (!Number.isFinite(minutes) || minutes < 1) {
+    res.status(400);
+    return next(new Error('Preparation time must be at least 1 minute'));
+  }
+
+  order.estimatedMinutes = Math.round(minutes);
+
+  await order.save();
+
+  emitOrderUpdate(order);
+
+  res.json({
+    success: true,
+    message: 'Preparation time updated',
+    data: order,
+  });
 };

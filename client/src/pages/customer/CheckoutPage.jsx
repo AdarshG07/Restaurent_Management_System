@@ -17,13 +17,150 @@ const CheckoutPage = () => {
   const [paymentSummary, setPaymentSummary] = useState(null);
   const navigate = useNavigate();
 
-  // const handlePlaceOrder = async () => {
-  //   if (!cartItems.length) {
-  //     toast.error('Cart is empty');
-  //     return;
-  //   }
+//   const handlePlaceOrder = async () => {
+//   if (!cartItems.length) {
+//     toast.error('Cart is empty');
+//     return;
+//   }
 
-  const handlePlaceOrder = async () => {
+//   const razorpayKeyId = import.meta.env.VITE_RAZORPAY_KEY_ID;
+
+//   if (!razorpayKeyId) {
+//     toast.error('Payment is not configured');
+//     return;
+//   }
+
+//   if (!window.Razorpay) {
+//     toast.error('Razorpay payment service is not available');
+//     return;
+//   }
+
+//   setLoading(true);
+//   setPaymentState('processing');
+//   setPaymentError('');
+//   setPaymentSummary(null);
+
+//   try {
+//     // 1. Create order in database
+//     const orderResponse = await api.post('/orders', {
+//       tableNumber,
+//       items: cartItems.map((item) => ({
+//         foodId: item.foodId,
+//         quantity: item.quantity,
+//         instructions: item.instructions,
+//       })),
+//       customerNotes: notes,
+//       discount: Number(discount),
+//     });
+
+//     const createdOrder = orderResponse.data.data;
+
+//     // 2. Create Razorpay order
+//     const paymentResponse = await api.post('/payments/create', {
+//       orderId: createdOrder._id,
+//     });
+
+//     const razorpayOrder = paymentResponse.data.data;
+
+//     // 3. Open Razorpay checkout
+//     const options = {
+//       key: razorpayKeyId,
+//       amount: razorpayOrder.amount,
+//       currency: razorpayOrder.currency,
+//       name: 'Restaurant Management',
+//       description: `Order ${createdOrder._id.slice(-6).toUpperCase()}`,
+//       order_id: razorpayOrder.id,
+
+//       handler: async (paymentResult) => {
+//         try {
+//           setPaymentState('verifying');
+
+//           // 4. Verify payment on backend
+//           const verifyResponse = await api.post('/payments/verify', {
+//             orderId: createdOrder._id,
+//             razorpayPaymentId: paymentResult.razorpay_payment_id,
+//             razorpayOrderId: paymentResult.razorpay_order_id,
+//             razorpaySignature: paymentResult.razorpay_signature,
+//           });
+
+//           const verifiedOrder = verifyResponse.data.data;
+
+//           recordRecentOrder(verifiedOrder);
+//           clearCart();
+
+//           setPaymentSummary({
+//             orderId: verifiedOrder._id,
+//             transactionId:
+//               verifiedOrder.payment?.paymentId ||
+//               paymentResult.razorpay_payment_id,
+//             amount:
+//               verifiedOrder.payment?.amount ||
+//               verifiedOrder.total,
+//             status:
+//               verifiedOrder.payment?.status || 'PAID',
+//             tableNumber: verifiedOrder.tableNumber,
+//           });
+
+//           setPaymentState('success');
+
+//           toast.success('Payment successful');
+//         } catch (error) {
+//           const message =
+//             error.response?.data?.message ||
+//             'Payment verification failed';
+
+//           setPaymentError(message);
+//           setPaymentState('error');
+
+//           toast.error(message);
+//         } finally {
+//           setLoading(false);
+//         }
+//       },
+
+//       modal: {
+//         ondismiss: () => {
+//           setPaymentError(
+//             'Payment was cancelled. Your order is still pending.'
+//           );
+
+//           setPaymentState('cancelled');
+//           setLoading(false);
+
+//           toast.error('Payment cancelled');
+//         },
+//       },
+//     };
+
+//     const razorpay = new window.Razorpay(options);
+
+//     razorpay.on('payment.failed', (response) => {
+//       const message =
+//         response.error?.description ||
+//         'Payment failed';
+
+//       setPaymentError(message);
+//       setPaymentState('error');
+//       setLoading(false);
+
+//       toast.error(message);
+//     });
+
+//     razorpay.open();
+//   } catch (error) {
+//     const message =
+//       error.response?.data?.message ||
+//       'Unable to start payment';
+
+//     setPaymentError(message);
+//     setPaymentState('error');
+//     setLoading(false);
+
+//     toast.error(message);
+//   }
+// };
+
+const handlePlaceOrder = async () => {
   if (!cartItems.length) {
     toast.error('Cart is empty');
     return;
@@ -32,8 +169,10 @@ const CheckoutPage = () => {
   setLoading(true);
   setPaymentState('processing');
   setPaymentError('');
+  setPaymentSummary(null);
 
   try {
+    // Create order in database
     const orderResponse = await api.post('/orders', {
       tableNumber,
       items: cartItems.map((item) => ({
@@ -47,23 +186,28 @@ const CheckoutPage = () => {
 
     const createdOrder = orderResponse.data.data;
 
+    // Save order locally
     recordRecentOrder(createdOrder);
+
+    // Clear cart
     clearCart();
 
+    // Show success
     setPaymentSummary({
       orderId: createdOrder._id,
-      transactionId: 'PROTOTYPE',
+      transactionId: null,
       amount: createdOrder.total,
-      status: 'ORDER PLACED',
+      status: createdOrder.payment?.status || 'PENDING',
       tableNumber: createdOrder.tableNumber,
     });
 
     setPaymentState('success');
 
-    toast.success('Order placed successfully!');
-  } catch (err) {
+    toast.success('Order placed successfully');
+  } catch (error) {
     const message =
-      err.response?.data?.message || 'Unable to place order';
+      error.response?.data?.message ||
+      'Unable to place order';
 
     setPaymentError(message);
     setPaymentState('error');
@@ -73,97 +217,6 @@ const CheckoutPage = () => {
     setLoading(false);
   }
 };
-
-  //   const razorpayKeyId = import.meta.env.VITE_RAZORPAY_KEY_ID;
-  //   if (!razorpayKeyId) {
-  //     setPaymentState('error');
-  //     setPaymentError('Razorpay is not configured. Please set VITE_RAZORPAY_KEY_ID in your environment.');
-  //     toast.error('Razorpay is not configured.');
-  //     return;
-  //   }
-  //   if (!window.Razorpay) {
-  //     setPaymentState('error');
-  //     setPaymentError('Payment service is not available. Please try again later.');
-  //     toast.error('Payment service is not available.');
-  //     return;
-  //   }
-
-  //   setLoading(true);
-  //   setPaymentState('processing');
-  //   setPaymentError('');
-  //   setPaymentSummary(null);
-  //   let createdOrder = null;
-
-  //   try {
-  //     const orderResponse = await api.post('/orders', {
-  //       tableNumber,
-  //       items: cartItems.map((item) => ({ foodId: item.foodId, quantity: item.quantity, instructions: item.instructions })),
-  //       customerNotes: notes,
-  //       discount: Number(discount),
-  //     });
-  //     createdOrder = orderResponse.data.data;
-
-  //     const paymentResponse = await api.post('/payments/create', { orderId: createdOrder._id });
-  //     const razorpayOrder = paymentResponse.data.data;
-
-  //     const options = {
-  //       key: razorpayKeyId,
-  //       amount: razorpayOrder.amount,
-  //       currency: razorpayOrder.currency,
-  //       name: 'Restaurant Delight',
-  //       description: `Order ${createdOrder._id.slice(-6).toUpperCase()}`,
-  //       order_id: razorpayOrder.id,
-  //       handler: async (paymentResult) => {
-  //         try {
-  //           setPaymentState('verifying');
-  //           const verifyResponse = await api.post('/payments/verify', {
-  //             orderId: createdOrder._id,
-  //             razorpayPaymentId: paymentResult.razorpay_payment_id,
-  //             razorpayOrderId: paymentResult.razorpay_order_id,
-  //             razorpaySignature: paymentResult.razorpay_signature,
-  //           });
-  //           const verifiedOrder = verifyResponse.data.data;
-  //           recordRecentOrder(verifiedOrder);
-  //           clearCart();
-  //           setPaymentSummary({
-  //             orderId: verifiedOrder._id,
-  //             transactionId: verifiedOrder.payment?.paymentId || paymentResult.razorpay_payment_id,
-  //             amount: verifiedOrder.payment?.amount || verifiedOrder.total,
-  //             status: verifiedOrder.payment?.status || 'PAID',
-  //             tableNumber: verifiedOrder.tableNumber,
-  //           });
-  //           setPaymentState('success');
-  //           toast.success('Payment successful');
-  //         } catch (verifyError) {
-  //           const message = verifyError.response?.data?.message || 'Payment verification failed. Please contact support.';
-  //           setPaymentError(message);
-  //           setPaymentState('error');
-  //           toast.error(message);
-  //         } finally {
-  //           setLoading(false);
-  //         }
-  //       },
-  //       modal: {
-  //         ondismiss: () => {
-  //           const message = 'Payment was cancelled. Your order is still pending.';
-  //           setPaymentError(message);
-  //           setPaymentState('cancelled');
-  //           toast.error(message);
-  //           setLoading(false);
-  //         },
-  //       },
-  //     };
-
-  //     const razorpay = new window.Razorpay(options);
-  //     razorpay.open();
-  //   } catch (err) {
-  //     const message = err.response?.data?.message || 'Unable to place order';
-  //     setPaymentError(message);
-  //     setPaymentState('error');
-  //     toast.error(message);
-  //     setLoading(false);
-  //   }
-  // };
 
   const summary = useMemo(() => ({ subtotal: totals.subtotal, gst: totals.gst, total: totals.total, discount: Number(discount) || 0 }), [totals, discount]);
 
@@ -256,8 +309,7 @@ const CheckoutPage = () => {
           </label>
           <div className="mt-6">
             <Button onClick={handlePlaceOrder} className="w-full py-3" disabled={loading || cartItems.length === 0}>
-              {loading ? (paymentState === 'verifying' ? 'Verifying payment...' : 'Processing payment...') : 'Place Order'}
-            </Button>
+                {loading ? 'Placing order...' : 'Place Order'}  </Button>
           </div>
           {paymentState === 'success' && paymentSummary && (
             <div className="mt-6 rounded-3xl border border-emerald-200 bg-emerald-50 p-5 text-sm text-emerald-900 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200">

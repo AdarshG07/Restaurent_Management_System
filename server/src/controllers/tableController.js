@@ -30,7 +30,7 @@ export const removeTable = async (req, res, next) => {
     res.status(404);
     return next(new Error('Table not found'));
   }
-  await table.remove();
+  await table.deleteOne();
   res.json({ success: true, message: 'Table removed' });
 };
 

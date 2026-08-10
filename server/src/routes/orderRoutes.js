@@ -1,8 +1,14 @@
 import express from 'express';
 import { body } from 'express-validator';
 import { protectAdmin } from '../middleware/authMiddleware.js';
-import { createManualOrder, createOrder, getOrder, listOrders, updateOrderStatus } from '../controllers/orderController.js';
-
+import {
+  createManualOrder,
+  createOrder,
+  getOrder,
+  listOrders,
+  updateOrderStatus,
+  updatePreparationTime,
+} from '../controllers/orderController.js';
 const router = express.Router();
 
 router.get('/', protectAdmin, listOrders);
@@ -19,5 +25,6 @@ router.post(
 );
 router.post('/manual', protectAdmin, createManualOrder);
 router.patch('/:id/status', protectAdmin, updateOrderStatus);
+router.patch('/:id/preparation-time', protectAdmin, updatePreparationTime);
 
 export default router;

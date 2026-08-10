@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams, useSearchParams } from 'react-router-dom';
+import { useParams, useSearchParams, Link } from 'react-router-dom';
 import api from '../../services/api.js';
 import Card from '../../components/common/Card.jsx';
 import Button from '../../components/common/Button.jsx';
@@ -56,6 +56,10 @@ const ReceiptPage = () => {
           <div className="flex flex-wrap gap-3">
             <Button onClick={downloadPdf}>Download PDF</Button>
             <Button onClick={() => window.print()}>Print Receipt</Button>
+            <Link to={`/feedback?orderId=${order._id}`}
+              className="rounded-2xl bg-sky-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-sky-700">
+                Give Feedback
+            </Link>
           </div>
         </div>
       </Card>

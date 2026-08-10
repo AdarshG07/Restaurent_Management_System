@@ -120,6 +120,6 @@ export const deleteFoodItem = async (req, res, next) => {
     res.status(404);
     return next(new Error('Food item not found'));
   }
-  await item.remove();
+  await item.deleteOne();
   res.json({ success: true, message: 'Food item deleted' });
 };

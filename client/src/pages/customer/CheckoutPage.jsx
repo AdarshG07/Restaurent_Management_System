@@ -242,7 +242,10 @@ const handlePlaceOrder = async () => {
                       <button onClick={() => updateQuantity(item.foodId, item.quantity - 1)} className="rounded-2xl border border-slate-200 px-3 py-1 text-sm dark:border-slate-700">-</button>
                       <span className="text-sm">{item.quantity}</span>
                       <button onClick={() => updateQuantity(item.foodId, item.quantity + 1)} className="rounded-2xl border border-slate-200 px-3 py-1 text-sm dark:border-slate-700">+</button>
-                      <button onClick={() => removeItem(item.foodId)} className="rounded-2xl border border-rose-200 px-3 py-1 text-sm text-rose-700 dark:border-rose-600 dark:text-rose-300">Remove</button>
+                      <button onClick={() => removeItem(item.foodId)}
+                      className="rounded-2xl bg-red-500 px-4 py-2 text-sm font-semibold text-white hover:bg-red-600">
+                          🗑️ Remove
+                      </button>
                     </div>
                   </div>
                 </div>

@@ -125,7 +125,13 @@ await food.save();
   table.status = 'OCCUPIED';
   await table.save();
   emitOrderUpdate(newOrder);
-  emitNotification({ title: 'New order received', message: `Order ${newOrder._id} is waiting`, type: 'order' });
+  const shortOrderId = newOrder._id.toString().slice(-6).toUpperCase();
+
+emitNotification({
+  title: 'New order received',
+  message: `Order #${shortOrderId} is waiting`,
+  type: 'order'
+});
   res.status(201).json({ success: true, message: 'Order placed', data: newOrder });
 };
 

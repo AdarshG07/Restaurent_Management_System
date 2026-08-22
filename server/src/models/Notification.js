@@ -8,7 +8,7 @@ const notificationSchema = mongoose.Schema(
     read: { type: Boolean, default: false },
   },
   { timestamps: true }
-);
+);  
 
 const Notification = mongoose.model('Notification', notificationSchema);
 export default Notification;

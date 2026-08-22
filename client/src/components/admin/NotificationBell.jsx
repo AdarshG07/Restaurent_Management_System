@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { io } from 'socket.io-client';
-import { Bell, CircleDot, Clock3, X } from 'lucide-react';
+import { Bell, CircleDot, X } from 'lucide-react';
 import { toast } from 'sonner';
 import api from '../../services/api.js';
 
@@ -32,14 +32,32 @@ const NotificationBell = () => {
   useEffect(() => {
     const socketUrl = import.meta.env.VITE_API_BASE_URL?.replace('/api', '') || window.location.origin;
     const token = api.defaults.headers.common.Authorization?.split(' ')[1];
+    if ('Notification' in window && Notification.permission === 'default') {
+    Notification.requestPermission();
+    }
     const socket = io(socketUrl, { auth: { token } });
 
     socket.on('connect', () => setSocketConnected(true));
     socket.on('disconnect', () => setSocketConnected(false));
     socket.on('notification', (notification) => {
-      setNotifications((current) => [{ ...notification, read: notification.read || false }, ...current].slice(0, 20));
-      toast(notification.message || notification.title || 'New notification');
-    });
+  setNotifications((current) => [
+    { ...notification, read: notification.read || false },
+    ...current
+  ].slice(0, 20));
+
+  toast(notification.message || notification.title || 'New notification');
+
+  // Browser notification
+  if ('Notification' in window && Notification.permission === 'granted') {
+    new Notification(
+      notification.title || 'Restaurant Notification',
+      {
+        body: notification.message || 'You have a new notification.',
+        icon: '/favicon.ico',
+      }
+    );
+  }
+});
     socket.emit('joinAdmin');
 
     return () => {
@@ -59,27 +77,39 @@ const NotificationBell = () => {
   }, []);
 
   const markAllAsRead = async () => {
-    const unread = notifications.filter((item) => !item.read);
-    if (!unread.length) return;
+  const unread = notifications.filter((item) => !item.read);
 
-    setNotifications((current) => current.map((item) => ({ ...item, read: true })));
-    try {
-      await Promise.all(
-        unread
-          .filter((item) => item._id)
-          .map((item) => api.patch(`/notifications/${item._id}/read`))
-      );
-    } catch (err) {
-      console.warn('Unable to mark all notifications read', err);
-    }
-  };
+  if (!unread.length) return;
 
-  const toggleOpen = async () => {
-    const next = !open;
-    setOpen(next);
-    if (next) await markAllAsRead();
-  };
+  try {
+    await Promise.all(
+      unread
+        .filter((item) => item._id)
+        .map((item) =>
+          api.patch(`/notifications/${item._id}/read`)
+        )
+    );
 
+    setNotifications((current) =>
+      current.map((item) => ({
+        ...item,
+        read: true,
+      }))
+    );
+
+    toast.success('All notifications marked as read');
+  } catch (err) {
+    console.error('Mark all read failed:', err);
+    toast.error(
+      err.response?.data?.message ||
+      'Unable to mark notifications as read'
+    );
+  }
+};
+
+  const toggleOpen = () => {
+  setOpen((current) => !current);
+};
   const formatTime = (value) => {
     if (!value) return '';
     return new Date(value).toLocaleString();
